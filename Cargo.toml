@@ -1,0 +1,10 @@
+[package]
+name = "hx_duplicate_finder"
+version = "1.0.0"
+edition = "2024"
+
+[dependencies]
+sha2 = "0.10"
+walkdir = "2.5"
+chrono = "0.4"
+trash = "5.2"
