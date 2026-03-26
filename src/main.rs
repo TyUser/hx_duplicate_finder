@@ -66,6 +66,7 @@ const DEFAULT_EXCLUDED_DIRS: &[&str] = &[
     "wp-includes",
     "x86_64",
     "Paradox Interactive",
+    "TECU3v3.6.0.6",
 ];
 
 const DEFAULT_EXCLUDED_FILENAMES: &[&str] = &[
@@ -86,7 +87,7 @@ const DEFAULT_EXCLUDED_FILENAMES: &[&str] = &[
 ];
 
 const DEFAULT_EXCLUDED_EXTENSIONS_WHITE_LIST: &[&str] = &[
-    "backup", "djvu", "doc", "docx", "exe", "fb2", "gif", "htm", "html", "ico", "jpeg", "jpg", "log", "mp3", "odt", "pdf", "png", "sp", "txt", "xls", "zip",
+    "backup", "djvu", "doc", "docx", "exe", "fb2", "gif", "htm", "html", "ico", "jpeg", "jpg", "log", "mp3", "odt", "pdf", "png", "sp", "txt", "xls", "zip", "mp4", "avi", "mov",
 ];
 
 struct Logger {
