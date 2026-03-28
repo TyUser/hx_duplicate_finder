@@ -13,6 +13,7 @@ const DEFAULT_EXCLUDED_DIRS: &[&str] = &[
     ".cache",
     ".cargo",
     ".git",
+    ".github",
     ".gradle",
     ".idea",
     ".idlerc",
@@ -32,6 +33,7 @@ const DEFAULT_EXCLUDED_DIRS: &[&str] = &[
     "GitHub",
     "Lib",
     "My Games",
+    "Paradox Interactive",
     "Program Files",
     "Program Files (x86)",
     "ProgramData",
@@ -41,9 +43,15 @@ const DEFAULT_EXCLUDED_DIRS: &[&str] = &[
     "Steam",
     "SteamLibrary",
     "System32",
+    "TECU3v3.6.0.6",
     "WebstormProjects",
     "Windows",
     "XboxGames",
+    "bl-content",
+    "bl-kernel",
+    "bl-languages",
+    "bl-plugins",
+    "bl-themes",
     "debug",
     "game",
     "games",
@@ -62,11 +70,10 @@ const DEFAULT_EXCLUDED_DIRS: &[&str] = &[
     "sourcemod",
     "stable-diffusion",
     "steamapps",
+    "wp-admin",
     "wp-content",
     "wp-includes",
     "x86_64",
-    "Paradox Interactive",
-    "TECU3v3.6.0.6",
 ];
 
 const DEFAULT_EXCLUDED_FILENAMES: &[&str] = &[
@@ -74,20 +81,23 @@ const DEFAULT_EXCLUDED_FILENAMES: &[&str] = &[
     "AlbumArtSmall.jpg",
     "NTUSER.DAT",
     "README.md",
+    "UnityCrashHandler64.exe",
+    "cd.ico",
     "compile.exe",
     "cover.JPG",
-    "cd.ico",
     "desktop.ini",
     "favicon.ico",
     "favicon.png",
+    "index.html",
+    "install.exe",
+    "readme.html",
     "spcomp.exe",
     "spcomp64.exe",
-    "install.exe",
-    "UnityCrashHandler64.exe",
 ];
 
 const DEFAULT_EXCLUDED_EXTENSIONS_WHITE_LIST: &[&str] = &[
-    "backup", "djvu", "doc", "docx", "exe", "fb2", "gif", "htm", "html", "ico", "jpeg", "jpg", "log", "mp3", "odt", "pdf", "png", "sp", "txt", "xls", "zip", "mp4", "avi", "mov",
+    "7z", "avi", "backup", "chm", "djvu", "doc", "docx", "exe", "fb2", "gif", "htm", "html", "ico", "jpeg", "jpg", "log", "mov", "mp3", "mp4", "numbers", "odt", "pdf", "png", "pptx", "psd", "pxm",
+    "rar", "sp", "txt", "xls", "zip",
 ];
 
 struct Logger {
@@ -201,7 +211,10 @@ fn read_delete_config(config_path: &Path, logger: &mut Logger) -> String {
     }
 
     if !config_path.exists() {
-        logger.log(&format!("Файл {} не найден, создаём с настройкой по умолчанию 'null'.", config_path.display()));
+        logger.log(&format!(
+            "Файл {} не найден, создаём с настройкой по умолчанию 'null'. Для автоматического удаления файлов измени на 'yes'",
+            config_path.display()
+        ));
         let content = "null";
         if let Err(e) = fs::write(config_path, content) {
             logger.log(&format!("Ошибка записи в файл {}: {}", config_path.display(), e));
