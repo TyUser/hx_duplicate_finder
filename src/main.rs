@@ -88,6 +88,7 @@ const DEFAULT_EXCLUDED_FILENAMES: &[&str] = &[
     "desktop.ini",
     "favicon.ico",
     "favicon.png",
+    "folder.jpg",
     "index.html",
     "install.exe",
     "readme.html",
