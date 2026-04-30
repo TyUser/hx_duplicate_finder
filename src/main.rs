@@ -303,13 +303,12 @@ fn main() {
 
     let exe_path = std::env::current_exe().unwrap_or_default();
 
-    // let exclusions_dir = current_dir.join("hx_settings");
     let exclusions_dir = PathBuf::from(std::env::var("USERPROFILE").unwrap_or_else(|_| "C:\\Users\\Default".to_string()))
         .join("Documents")
         .join("hx_settings");
 
     let excluded_dirs = load_exclusions(&exclusions_dir.join("folders.txt"), DEFAULT_EXCLUDED_DIRS, &mut logger);
-    let excluded_filenames = load_exclusions(&exclusions_dir.join("file.txt"), DEFAULT_EXCLUDED_FILENAMES, &mut logger);
+    let excluded_filenames = load_exclusions(&exclusions_dir.join("files.txt"), DEFAULT_EXCLUDED_FILENAMES, &mut logger);
     let included_extensions = load_exclusions(&exclusions_dir.join("extensions.txt"), DEFAULT_EXCLUDED_EXTENSIONS_WHITE_LIST, &mut logger);
 
     let delete_config_path = exclusions_dir.join("delete.txt");
