@@ -131,7 +131,7 @@ impl Drop for Logger {
 }
 
 fn is_safe_exclusion_line(line: &str) -> bool {
-    let trimmed = line.trim();
+    let trimmed = line.trim_start_matches('\u{FEFF}').trim();
     if trimmed.is_empty() || trimmed == "." || trimmed == ".." {
         return false;
     }
@@ -366,6 +366,10 @@ fn main() {
         if let Ok(meta) = entry.metadata() {
             let size = meta.len();
             if size < 1024 {
+                continue;
+            }
+
+            if size > 20 * 1024 * 1024 * 1024 {
                 continue;
             }
 

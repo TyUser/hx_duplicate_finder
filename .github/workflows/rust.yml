@@ -28,8 +28,14 @@ jobs:
     - name: Run tests
       run: cargo test --verbose
 
+    - name: Archive Release
+      if: startsWith(github.ref, 'refs/tags/')
+      shell: pwsh
+      run: |
+        Compress-Archive -Path target/release/hx_duplicate_finder.exe -DestinationPath target/release/hx_duplicate_finder-windows.zip
+
     - name: Release
       uses: softprops/action-gh-release@v2
       if: startsWith(github.ref, 'refs/tags/')
       with:
-        files: target/release/hx_duplicate_finder.exe
+        files: target/release/hx_duplicate_finder-windows.zip
