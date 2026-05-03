@@ -260,7 +260,13 @@ fn get_sha256(file_path: &Path) -> io::Result<String> {
         hasher.update(&buffer[..n]);
     }
 
-    Ok(format!("{:x}", hasher.finalize()))
+    let bytes = hasher.finalize();
+    let mut hex_str = String::with_capacity(bytes.len() * 2);
+    for b in bytes.iter() {
+        hex_str.push_str(&format!("{:02x}", b));
+    }
+
+    Ok(hex_str)
 }
 
 fn move_to_trash_if_exists(path: &Path, logger: &mut Logger) -> bool {
