@@ -104,6 +104,8 @@ const DEFAULT_EXCLUDED_EXTENSIONS_WHITE_LIST: &[&str] = &[
     "rar", "sp", "txt", "xls", "zip",
 ];
 
+const MAX_FILE_SIZE: u64 = 20 * 1024 * 1024 * 1024;
+
 struct Logger {
     writer: BufWriter<File>,
 }
@@ -323,9 +325,9 @@ fn main() {
     let delete_config_path = exclusions_dir.join("delete.txt");
     let delete_mode = read_delete_config(&delete_config_path, &mut logger);
     if delete_mode == "yes" {
-        logger.log(&format!("Режим: удаление активно"));
+        logger.log("Режим: удаление активно");
     } else {
-        logger.log(&format!("Режим: только просмотр"));
+        logger.log("Режим: только просмотр");
     }
     logger.log(&format!("Старт сканирования: {:?}", current_dir));
     logger.log(&format!(
@@ -378,7 +380,7 @@ fn main() {
                 continue;
             }
 
-            if size > 20 * 1024 * 1024 * 1024 {
+            if size > MAX_FILE_SIZE {
                 continue;
             }
 
