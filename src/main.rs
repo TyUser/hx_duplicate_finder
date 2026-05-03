@@ -33,6 +33,7 @@ const DEFAULT_EXCLUDED_DIRS: &[&str] = &[
     "GitHub",
     "Lib",
     "My Games",
+    "OneDrive",
     "Paradox Interactive",
     "Program Files",
     "Program Files (x86)",
@@ -52,6 +53,7 @@ const DEFAULT_EXCLUDED_DIRS: &[&str] = &[
     "bl-languages",
     "bl-plugins",
     "bl-themes",
+    "cygwin",
     "debug",
     "game",
     "games",
@@ -74,6 +76,7 @@ const DEFAULT_EXCLUDED_DIRS: &[&str] = &[
     "wp-content",
     "wp-includes",
     "x86_64",
+    "zapret-discord-youtube-main",
 ];
 
 const DEFAULT_EXCLUDED_FILENAMES: &[&str] = &[
