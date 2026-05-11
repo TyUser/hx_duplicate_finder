@@ -27,6 +27,7 @@ const DEFAULT_EXCLUDED_DIRS: &[&str] = &[
     "1Password",
     "AppData",
     "Arduino",
+    "Backup",
     "EAgames",
     "EpicGames",
     "GOG Games",
