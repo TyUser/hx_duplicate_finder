@@ -4,7 +4,6 @@ use std::collections::{HashMap, HashSet};
 use std::fs::{self, File, OpenOptions};
 use std::io::{self, BufRead, BufReader, BufWriter, Read, Write};
 use std::path::{Path, PathBuf};
-use trash;
 use walkdir::WalkDir;
 
 const DEFAULT_EXCLUDED_DIRS: &[&str] = &[
@@ -108,7 +107,7 @@ const DEFAULT_EXCLUDED_EXTENSIONS_WHITE_LIST: &[&str] = &[
 ];
 
 const MIN_FILE_SIZE: u64 = 1024;
-const MAX_FILE_SIZE: u64 = 1 * 1024 * 1024 * 1024;
+const MAX_FILE_SIZE: u64 = 1024 * 1024 * 1024;
 
 struct Logger {
     writer: BufWriter<File>,
@@ -152,14 +151,12 @@ fn is_safe_exclusion_line(line: &str) -> bool {
 }
 
 fn load_exclusions(file_path: &Path, default_list: &[&str], logger: &mut Logger) -> HashSet<String> {
-    if let Some(parent) = file_path.parent() {
-        if !parent.exists() {
-            if let Err(e) = fs::create_dir_all(parent) {
+    if let Some(parent) = file_path.parent()
+        && !parent.exists()
+            && let Err(e) = fs::create_dir_all(parent) {
                 logger.log(&format!("Ошибка создания директории {}: {}", parent.display(), e));
                 return default_list.iter().map(|s| s.to_lowercase()).collect();
             }
-        }
-    }
 
     if !file_path.exists() {
         logger.log(&format!("Файл {} не найден, создаём с настройками по умолчанию.", file_path.display()));
@@ -207,48 +204,6 @@ fn load_exclusions(file_path: &Path, default_list: &[&str], logger: &mut Logger)
         default_list.iter().map(|s| s.to_lowercase()).collect()
     } else {
         set
-    }
-}
-
-fn read_delete_config(config_path: &Path, logger: &mut Logger) -> String {
-    if let Some(parent) = config_path.parent() {
-        if !parent.exists() {
-            if let Err(e) = fs::create_dir_all(parent) {
-                logger.log(&format!("Ошибка создания директории {}: {}", parent.display(), e));
-                return "false".to_string();
-            }
-        }
-    }
-
-    if !config_path.exists() {
-        logger.log(&format!(
-            "Файл {} не найден, создаём с настройкой по умолчанию 'false'. Для автоматического удаления файлов измени на 'yes'",
-            config_path.display()
-        ));
-        let content = "false";
-        if let Err(e) = fs::write(config_path, content) {
-            logger.log(&format!("Ошибка записи в файл {}: {}", config_path.display(), e));
-        }
-        return "false".to_string();
-    }
-
-    let file = match File::open(config_path) {
-        Ok(f) => f,
-        Err(e) => {
-            logger.log(&format!("Ошибка открытия файла {}: {}", config_path.display(), e));
-            return "false".to_string();
-        }
-    };
-
-    let reader = BufReader::new(file);
-    let mut lines = reader.lines();
-
-    if let Some(Ok(line)) = lines.next() {
-        let trimmed = line.trim().to_lowercase();
-        if trimmed == "yes" { "yes".to_string() } else { "false".to_string() }
-    } else {
-        logger.log(&format!("Файл {} пуст, используем 'false'.", config_path.display()));
-        "false".to_string()
     }
 }
 
@@ -331,13 +286,13 @@ fn main() {
     let excluded_dirs = load_exclusions(&exclusions_dir.join("folders.txt"), DEFAULT_EXCLUDED_DIRS, &mut logger);
     let excluded_filenames = load_exclusions(&exclusions_dir.join("files.txt"), DEFAULT_EXCLUDED_FILENAMES, &mut logger);
     let included_extensions = load_exclusions(&exclusions_dir.join("extensions.txt"), DEFAULT_EXCLUDED_EXTENSIONS_WHITE_LIST, &mut logger);
+    let delete_mode_set = load_exclusions(&exclusions_dir.join("delete.txt"), &["false"], &mut logger);
 
-    let delete_config_path = exclusions_dir.join("delete.txt");
-    let delete_mode = read_delete_config(&delete_config_path, &mut logger);
+    let delete_mode = if delete_mode_set.contains("yes") { "yes" } else { "false" };
     if delete_mode == "yes" {
         logger.log("Режим: удаление активно");
     } else {
-        logger.log("Режим: только просмотр");
+        logger.log("Режим: только просмотр. Для включения режима удаления впишите 'yes' в delete.txt");
     }
     logger.log(&format!("Старт сканирования: {:?}", current_dir));
     logger.log(&format!(
