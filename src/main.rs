@@ -11,18 +11,21 @@ const DEFAULT_EXCLUDED_DIRS: &[&str] = &[
     ".VirtualBox",
     ".cache",
     ".cargo",
+    ".copilot",
     ".git",
     ".github",
     ".gradle",
     ".idea",
     ".idlerc",
     ".lmstudio",
+    ".local",
     ".platformio",
     ".rustup",
     ".service",
     ".venv",
     ".venv1",
     ".vscode",
+    ".vscode-shared",
     "1Password",
     "AppData",
     "Arduino",
@@ -99,6 +102,7 @@ const DEFAULT_EXCLUDED_FILENAMES: &[&str] = &[
     "readme.html",
     "spcomp.exe",
     "spcomp64.exe",
+    "main.rs",
 ];
 
 const DEFAULT_EXCLUDED_EXTENSIONS_WHITE_LIST: &[&str] = &[
@@ -153,10 +157,11 @@ fn is_safe_exclusion_line(line: &str) -> bool {
 fn load_exclusions(file_path: &Path, default_list: &[&str], logger: &mut Logger) -> HashSet<String> {
     if let Some(parent) = file_path.parent()
         && !parent.exists()
-            && let Err(e) = fs::create_dir_all(parent) {
-                logger.log(&format!("Ошибка создания директории {}: {}", parent.display(), e));
-                return default_list.iter().map(|s| s.to_lowercase()).collect();
-            }
+        && let Err(e) = fs::create_dir_all(parent)
+    {
+        logger.log(&format!("Ошибка создания директории {}: {}", parent.display(), e));
+        return default_list.iter().map(|s| s.to_lowercase()).collect();
+    }
 
     if !file_path.exists() {
         logger.log(&format!("Файл {} не найден, создаём с настройками по умолчанию.", file_path.display()));
