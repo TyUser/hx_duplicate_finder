@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: GPL-3.0-only
+
 use chrono::Local;
 use sha2::{Digest, Sha256};
 use std::collections::{HashMap, HashSet};
@@ -143,6 +145,10 @@ impl Drop for Logger {
 }
 
 fn is_safe_exclusion_line(line: &str) -> bool {
+    if line.len() > 128 {
+        return false;
+    }
+
     let trimmed = line.trim_start_matches('\u{FEFF}').trim();
     if trimmed.is_empty() || trimmed == "." || trimmed == ".." {
         return false;
@@ -183,9 +189,13 @@ fn load_exclusions(file_path: &Path, default_list: &[&str], logger: &mut Logger)
     let reader = BufReader::new(file);
     let mut set = HashSet::new();
 
+    let mut valid_lines = Vec::new();
+    let mut invalid_lines = false;
+
     for (idx, line_result) in reader.lines().enumerate() {
         if idx >= 1024 {
             logger.log(&format!("Достигнут лимит строк в файле {}", file_path.display()));
+            invalid_lines = true;
             break;
         }
 
@@ -193,15 +203,26 @@ fn load_exclusions(file_path: &Path, default_list: &[&str], logger: &mut Logger)
             Ok(l) => l,
             Err(e) => {
                 logger.log(&format!("Ошибка чтения строки в {}: {}", file_path.display(), e));
+                invalid_lines = true;
                 continue;
             }
         };
 
-        if line.len() > 128 || !is_safe_exclusion_line(&line) {
+        if !is_safe_exclusion_line(&line) {
+            invalid_lines = true;
             continue;
         }
 
         set.insert(line.trim().to_lowercase());
+        valid_lines.push(line);
+    }
+
+    if invalid_lines && !set.is_empty() {
+        logger.log(&format!("Файл {} содержал некорректные строки. Перезаписываем.", file_path.display()));
+        let content = valid_lines.join("\n");
+        if let Err(e) = fs::write(file_path, content) {
+            logger.log(&format!("Ошибка перезаписи файла {}: {}", file_path.display(), e));
+        }
     }
 
     if set.is_empty() {
@@ -345,7 +366,7 @@ fn main() {
                 continue;
             }
         } else {
-            continue; // файлы без расширения пропускаем
+            continue;
         }
 
         if let Ok(meta) = entry.metadata() {
