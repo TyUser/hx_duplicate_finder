@@ -83,6 +83,7 @@ const DEFAULT_EXCLUDED_DIRS: &[&str] = &[
     "x86_64",
     "zapret-discord-youtube-main",
     "zapret-main",
+    "zapret2-main",
 ];
 
 const DEFAULT_EXCLUDED_FILENAMES: &[&str] = &[
@@ -101,15 +102,15 @@ const DEFAULT_EXCLUDED_FILENAMES: &[&str] = &[
     "folder.jpg",
     "index.html",
     "install.exe",
+    "main.rs",
     "readme.html",
     "spcomp.exe",
     "spcomp64.exe",
-    "main.rs",
 ];
 
 const DEFAULT_EXCLUDED_EXTENSIONS_WHITE_LIST: &[&str] = &[
-    "7z", "avi", "backup", "chm", "csv", "djvu", "doc", "docx", "exe", "fb2", "gif", "htm", "html", "ico", "jpeg", "jpg", "log", "mov", "mp3", "mp4", "numbers", "odt", "pdf", "png", "pptx", "psd",
-    "pxm", "rar", "sp", "txt", "xls", "zip",
+    "7z", "avi", "backup", "chm", "csv", "djvu", "doc", "docx", "exe", "fb2", "gif", "htm", "html", "ico", "iso", "jpeg", "jpg", "log", "mov", "mp3", "mp4", "numbers", "odt", "pdf", "png", "pptx",
+    "psd", "pxm", "rar", "sp", "txt", "xls", "zip",
 ];
 
 const MIN_FILE_SIZE: u64 = 1024;
