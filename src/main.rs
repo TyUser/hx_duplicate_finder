@@ -108,7 +108,7 @@ const DEFAULT_EXCLUDED_FILENAMES: &[&str] = &[
     "spcomp64.exe",
 ];
 
-const DEFAULT_EXCLUDED_EXTENSIONS_WHITE_LIST: &[&str] = &[
+const DEFAULT_EXTENSIONS_WHITE_LIST: &[&str] = &[
     "7z", "avi", "backup", "chm", "csv", "djvu", "doc", "docx", "exe", "fb2", "gif", "htm", "html", "ico", "iso", "jpeg", "jpg", "log", "mov", "mp3", "mp4", "numbers", "odt", "pdf", "png", "pptx",
     "psd", "pxm", "rar", "sp", "txt", "xls", "zip",
 ];
@@ -257,17 +257,7 @@ fn get_sha256(file_path: &Path) -> io::Result<String> {
     Ok(hex_str)
 }
 
-fn move_to_trash_if_exists(path: &Path, logger: &mut Logger) -> bool {
-    /*    if !path.exists() {
-            logger.log(&format!("Пропуск удаления: файл не существует: {:?}", path));
-            return false;
-        }
-
-        if !path.is_file() {
-            logger.log(&format!("Пропуск удаления: путь не является файлом: {:?}", path));
-            return false;
-        }
-    */
+fn move_to_trash(path: &Path, logger: &mut Logger) -> bool {
     match trash::delete(path) {
         Ok(()) => {
             logger.log(&format!("Файл помещен в корзину: {:?}", path));
@@ -312,11 +302,11 @@ fn main() {
 
     let excluded_dirs = load_exclusions(&exclusions_dir.join("folders.txt"), DEFAULT_EXCLUDED_DIRS, &mut logger);
     let excluded_filenames = load_exclusions(&exclusions_dir.join("files.txt"), DEFAULT_EXCLUDED_FILENAMES, &mut logger);
-    let included_extensions = load_exclusions(&exclusions_dir.join("extensions.txt"), DEFAULT_EXCLUDED_EXTENSIONS_WHITE_LIST, &mut logger);
-    let delete_mode_set = load_exclusions(&exclusions_dir.join("delete.txt"), &["false"], &mut logger);
+    let included_extensions = load_exclusions(&exclusions_dir.join("extensions.txt"), DEFAULT_EXTENSIONS_WHITE_LIST, &mut logger);
+    let delete_mode_set = load_exclusions(&exclusions_dir.join("delete.txt"), &["no"], &mut logger);
 
-    let delete_mode = if delete_mode_set.contains("yes") { "yes" } else { "false" };
-    if delete_mode == "yes" {
+    let delete_mode = delete_mode_set.contains("yes");
+    if delete_mode {
         logger.log("Режим: удаление активно");
     } else {
         logger.log("Режим: только просмотр. Для включения режима удаления впишите 'yes' в delete.txt");
@@ -398,20 +388,20 @@ fn main() {
             match get_sha256(&path) {
                 Ok(hash) => {
                     if let Some(original) = hashes.get(&hash) {
-                        let path_len = path.to_string_lossy().len();
-                        let orig_len = original.to_string_lossy().len();
+                        let name_len_1 = path.to_string_lossy().len();
+                        let name_len_2 = original.to_string_lossy().len();
 
-                        if orig_len > path_len {
-                            if delete_mode == "yes" {
-                                if move_to_trash_if_exists(original, &mut logger) {
+                        if name_len_2 > name_len_1 {
+                            if delete_mode {
+                                if move_to_trash(original, &mut logger) {
                                     hashes.insert(hash, path.clone());
                                 }
                             } else {
                                 logger.log(&format!("Оригинал: {:?} ({} байт) -> Дубликат: {:?}", path, size, original));
                             }
                         } else {
-                            if delete_mode == "yes" {
-                                let _ = move_to_trash_if_exists(&path, &mut logger);
+                            if delete_mode {
+                                let _ = move_to_trash(&path, &mut logger);
                             } else {
                                 logger.log(&format!("Оригинал: {:?} ({} байт) -> Дубликат: {:?}", original, size, path));
                             }
@@ -429,6 +419,6 @@ fn main() {
         }
     }
 
-    logger.log(&format!("Работа завершена. Найдено дубликатов: {}", duplicates_found));
+    logger.log(&format!("Работа завершена. Обработано дубликатов: {}", duplicates_found));
     logger.flush();
 }
