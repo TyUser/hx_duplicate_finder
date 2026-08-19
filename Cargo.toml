@@ -1,5 +1,5 @@
 [package]
-name = "hx_duplicate_finder"
+name = "hx-duplicate-finder"
 version = "1.3.5"
 edition = "2024"
 license = "GPL-3.0-only"
