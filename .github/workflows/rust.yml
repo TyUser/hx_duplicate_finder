@@ -36,11 +36,11 @@ jobs:
       if: startsWith(github.ref, 'refs/tags/')
       shell: pwsh
       run: |
-        Compress-Archive -Path target/release/hx_duplicate_finder.exe -DestinationPath target/release/hx_duplicate_finder-windows.zip
+        Compress-Archive -Path target/release/hx-duplicate-finder.exe -DestinationPath target/release/hx-duplicate-finder-windows.zip
 
     - name: Release
       uses: softprops/action-gh-release@v2
       if: startsWith(github.ref, 'refs/tags/')
       with:
-        files: target/release/hx_duplicate_finder-windows.zip
+        files: target/release/hx-duplicate-finder-windows.zip
         generate_release_notes: true
