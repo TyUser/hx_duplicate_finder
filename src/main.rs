@@ -145,7 +145,7 @@ impl Drop for Logger {
     }
 }
 
-fn is_safe_exclusion_line(line: &str) -> bool {
+fn is_valid_setting_line(line: &str) -> bool {
     if line.len() > 128 {
         return false;
     }
@@ -161,7 +161,7 @@ fn is_safe_exclusion_line(line: &str) -> bool {
     })
 }
 
-fn load_exclusions(file_path: &Path, default_list: &[&str], logger: &mut Logger) -> HashSet<String> {
+fn load_settings_set(file_path: &Path, default_list: &[&str], logger: &mut Logger) -> HashSet<String> {
     if let Some(parent) = file_path.parent()
         && !parent.exists()
         && let Err(e) = fs::create_dir_all(parent)
@@ -209,7 +209,7 @@ fn load_exclusions(file_path: &Path, default_list: &[&str], logger: &mut Logger)
             }
         };
 
-        if !is_safe_exclusion_line(&line) {
+        if !is_valid_setting_line(&line) {
             invalid_lines = true;
             continue;
         }
@@ -296,14 +296,14 @@ fn main() {
         }
     };
 
-    let exclusions_dir = PathBuf::from(std::env::var("USERPROFILE").unwrap_or_else(|_| "C:\\Users\\Default".to_string()))
+    let settings_dir = PathBuf::from(std::env::var("USERPROFILE").unwrap_or_else(|_| "C:\\Users\\Default".to_string()))
         .join("Documents")
         .join("hx_settings");
 
-    let excluded_dirs = load_exclusions(&exclusions_dir.join("folders.txt"), DEFAULT_EXCLUDED_DIRS, &mut logger);
-    let excluded_filenames = load_exclusions(&exclusions_dir.join("files.txt"), DEFAULT_EXCLUDED_FILENAMES, &mut logger);
-    let included_extensions = load_exclusions(&exclusions_dir.join("extensions.txt"), DEFAULT_EXTENSIONS_WHITE_LIST, &mut logger);
-    let delete_mode_set = load_exclusions(&exclusions_dir.join("delete.txt"), &["no"], &mut logger);
+    let excluded_dirs = load_settings_set(&settings_dir.join("folders.txt"), DEFAULT_EXCLUDED_DIRS, &mut logger);
+    let excluded_filenames = load_settings_set(&settings_dir.join("files.txt"), DEFAULT_EXCLUDED_FILENAMES, &mut logger);
+    let included_extensions = load_settings_set(&settings_dir.join("extensions.txt"), DEFAULT_EXTENSIONS_WHITE_LIST, &mut logger);
+    let delete_mode_set = load_settings_set(&settings_dir.join("delete.txt"), &["no"], &mut logger);
 
     let delete_mode = delete_mode_set.contains("yes");
     if delete_mode {
@@ -387,23 +387,23 @@ fn main() {
         for path in files {
             match get_sha256(&path) {
                 Ok(hash) => {
-                    if let Some(original) = hashes.get(&hash) {
+                    if let Some(first_seen) = hashes.get(&hash) {
                         let name_len_1 = path.to_string_lossy().len();
-                        let name_len_2 = original.to_string_lossy().len();
+                        let name_len_2 = first_seen.to_string_lossy().len();
 
                         if name_len_2 > name_len_1 {
                             if delete_mode {
-                                if move_to_trash(original, &mut logger) {
+                                if move_to_trash(first_seen, &mut logger) {
                                     hashes.insert(hash, path.clone());
                                 }
                             } else {
-                                logger.log(&format!("Оригинал: {:?} ({} байт) -> Дубликат: {:?}", path, size, original));
+                                logger.log(&format!("Оригинал: {:?} ({} байт) -> Дубликат: {:?}", path, size, first_seen));
                             }
                         } else {
                             if delete_mode {
                                 let _ = move_to_trash(&path, &mut logger);
                             } else {
-                                logger.log(&format!("Оригинал: {:?} ({} байт) -> Дубликат: {:?}", original, size, path));
+                                logger.log(&format!("Оригинал: {:?} ({} байт) -> Дубликат: {:?}", first_seen, size, path));
                             }
                         }
 
