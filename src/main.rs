@@ -171,7 +171,7 @@ fn load_settings_set(file_path: &Path, default_list: &[&str], logger: &mut Logge
     }
 
     if !file_path.exists() {
-        logger.log(&format!("Файл {} не найден, создаём с настройками по умолчанию.", file_path.display()));
+        logger.log(&format!("Файл {} не найден, создаём с настройками по умолчанию", file_path.display()));
         let content = default_list.join("\n");
         if let Err(e) = fs::write(file_path, content) {
             logger.log(&format!("Ошибка записи в файл {}: {}", file_path.display(), e));
@@ -219,15 +219,16 @@ fn load_settings_set(file_path: &Path, default_list: &[&str], logger: &mut Logge
     }
 
     if invalid_lines && !set.is_empty() {
-        logger.log(&format!("Файл {} содержал некорректные строки. Перезаписываем.", file_path.display()));
         let content = valid_lines.join("\n");
         if let Err(e) = fs::write(file_path, content) {
             logger.log(&format!("Ошибка перезаписи файла {}: {}", file_path.display(), e));
+        } else {
+            logger.log(&format!("Файл {} содержал некорректные строки и был перезаписан", file_path.display()));
         }
     }
 
     if set.is_empty() {
-        logger.log(&format!("Файл {} пуст или не содержит валидных строк. Используем умолчания.", file_path.display()));
+        logger.log(&format!("Файл {} пуст или не содержит корректных строк. Используем умолчания", file_path.display()));
         default_list.iter().map(|s| s.to_lowercase()).collect()
     } else {
         set
@@ -260,11 +261,11 @@ fn get_sha256(file_path: &Path) -> io::Result<String> {
 fn move_to_trash(path: &Path, logger: &mut Logger) -> bool {
     match trash::delete(path) {
         Ok(()) => {
-            logger.log(&format!("Файл помещен в корзину: {:?}", path));
+            logger.log(&format!("Файл помещён в корзину: {:?}", path));
             true
         }
         Err(e) => {
-            logger.log(&format!("Ошибка перемещения в корзину {:?}: {}", path, e));
+            logger.log(&format!("Ошибка перемещения в корзину файла {:?}: {}", path, e));
             false
         }
     }
@@ -307,9 +308,9 @@ fn main() {
 
     let delete_mode = delete_mode_set.contains("yes");
     if delete_mode {
-        logger.log("Режим: удаление активно");
+        logger.log("Режим: удаление");
     } else {
-        logger.log("Режим: только просмотр. Для включения режима удаления впишите 'yes' в delete.txt");
+        logger.log("Режим: просмотр. Для включения режима удаления впишите 'yes' в файл delete.txt");
     }
     logger.log(&format!("Старт сканирования: {:?}", current_dir));
     logger.log(&format!(
@@ -398,6 +399,7 @@ fn main() {
                                 }
                             } else {
                                 logger.log(&format!("Оригинал: {:?} ({} байт) -> Дубликат: {:?}", path, size, first_seen));
+                                hashes.insert(hash, path.clone());
                             }
                         } else {
                             if delete_mode {
