@@ -166,15 +166,15 @@ fn load_settings_set(file_path: &Path, default_list: &[&str], logger: &mut Logge
         && !parent.exists()
         && let Err(e) = fs::create_dir_all(parent)
     {
-        logger.log(&format!("Ошибка создания директории {}: {}", parent.display(), e));
+        logger.log(&format!("Не удалось создать каталог {}: {}", parent.display(), e));
         return default_list.iter().map(|s| s.to_lowercase()).collect();
     }
 
     if !file_path.exists() {
-        logger.log(&format!("Файл {} не найден, создаём с настройками по умолчанию", file_path.display()));
+        logger.log(&format!("Файл настроек {} не найден. Создаётся файл со значениями по умолчанию", file_path.display()));
         let content = default_list.join("\n");
         if let Err(e) = fs::write(file_path, content) {
-            logger.log(&format!("Ошибка записи в файл {}: {}", file_path.display(), e));
+            logger.log(&format!("Не удалось записать файл {}: {}.", file_path.display(), e));
         }
         return default_list.iter().map(|s| s.to_lowercase()).collect();
     }
@@ -182,7 +182,7 @@ fn load_settings_set(file_path: &Path, default_list: &[&str], logger: &mut Logge
     let file = match File::open(file_path) {
         Ok(f) => f,
         Err(e) => {
-            logger.log(&format!("Ошибка открытия файла {}: {}", file_path.display(), e));
+            logger.log(&format!("Не удалось открыть файл {}: {}", file_path.display(), e));
             return default_list.iter().map(|s| s.to_lowercase()).collect();
         }
     };
@@ -195,7 +195,7 @@ fn load_settings_set(file_path: &Path, default_list: &[&str], logger: &mut Logge
 
     for (idx, line_result) in reader.lines().enumerate() {
         if idx >= 1024 {
-            logger.log(&format!("Достигнут лимит строк в файле {}", file_path.display()));
+            logger.log(&format!("В файле {} превышен лимит строк (1024)", file_path.display()));
             invalid_lines = true;
             break;
         }
@@ -203,7 +203,7 @@ fn load_settings_set(file_path: &Path, default_list: &[&str], logger: &mut Logge
         let line = match line_result {
             Ok(l) => l,
             Err(e) => {
-                logger.log(&format!("Ошибка чтения строки в {}: {}", file_path.display(), e));
+                logger.log(&format!("Не удалось прочитать строку в файле {}: {}", file_path.display(), e));
                 invalid_lines = true;
                 continue;
             }
@@ -221,14 +221,14 @@ fn load_settings_set(file_path: &Path, default_list: &[&str], logger: &mut Logge
     if invalid_lines && !set.is_empty() {
         let content = valid_lines.join("\n");
         if let Err(e) = fs::write(file_path, content) {
-            logger.log(&format!("Ошибка перезаписи файла {}: {}", file_path.display(), e));
+            logger.log(&format!("Не удалось перезаписать файл {}: {}", file_path.display(), e));
         } else {
-            logger.log(&format!("Файл {} содержал некорректные строки и был перезаписан", file_path.display()));
+            logger.log(&format!("Файл {} очищен от некорректных строк", file_path.display()));
         }
     }
 
     if set.is_empty() {
-        logger.log(&format!("Файл {} пуст или не содержит корректных строк. Используем умолчания", file_path.display()));
+        logger.log(&format!("Файл {} пуст или не содержит корректных строк. Используются значения по умолчанию", file_path.display()));
         default_list.iter().map(|s| s.to_lowercase()).collect()
     } else {
         set
@@ -261,11 +261,11 @@ fn get_sha256(file_path: &Path) -> io::Result<String> {
 fn move_to_trash(path: &Path, logger: &mut Logger) -> bool {
     match trash::delete(path) {
         Ok(()) => {
-            logger.log(&format!("Файл помещён в корзину: {:?}", path));
+            logger.log(&format!("Файл перемещён в корзину: {}", path.display()));
             true
         }
         Err(e) => {
-            logger.log(&format!("Ошибка перемещения в корзину файла {:?}: {}", path, e));
+            logger.log(&format!("Не удалось переместить файл в корзину: {}. Причина: {}", path.display(), e));
             false
         }
     }
@@ -276,7 +276,7 @@ fn main() {
     let mut logger = match Logger::new(log_path) {
         Ok(l) => l,
         Err(e) => {
-            eprintln!("Критическая ошибка: не удалось открыть лог-файл. {}", e);
+            eprintln!("Критическая ошибка: не удалось открыть лог-файл: {}", e);
             std::process::exit(1);
         }
     };
@@ -284,7 +284,7 @@ fn main() {
     let current_dir = match std::env::current_dir() {
         Ok(d) => d,
         Err(e) => {
-            logger.log(&format!("Ошибка получения текущей директории: {}", e));
+            logger.log(&format!("Не удалось получить текущий каталог: {}", e));
             return;
         }
     };
@@ -308,13 +308,13 @@ fn main() {
 
     let delete_mode = delete_mode_set.contains("yes");
     if delete_mode {
-        logger.log("Режим: удаление");
+        logger.log("Режим работы: удаление");
     } else {
-        logger.log("Режим: просмотр. Для включения режима удаления впишите 'yes' в файл delete.txt");
+        logger.log("Режим работы: просмотр. Для включения удаления впишите 'yes' в файл delete.txt");
     }
-    logger.log(&format!("Старт сканирования: {:?}", current_dir));
+    logger.log(&format!("Начато сканирование каталога: {}.", current_dir.display()));
     logger.log(&format!(
-        "Исключений загружено: папок: {}, файлов: {}. Разрешённых расширений файлов: {}",
+        "Загружены исключения: каталогов {}, файлов {}. Разрешённых расширений: {}",
         excluded_dirs.len(),
         excluded_filenames.len(),
         included_extensions.len()
@@ -375,7 +375,7 @@ fn main() {
         }
     }
 
-    logger.log(&format!("Сканирование завершено. Найдено групп файлов по размеру: {}", files_by_size.len()));
+    logger.log(&format!("Сканирование завершено. Найдено групп файлов со схожим размером: {}", files_by_size.len()));
 
     let mut duplicates_found = 0;
     let mut hashes: HashMap<String, PathBuf> = HashMap::new();
@@ -398,14 +398,14 @@ fn main() {
                                     hashes.insert(hash, path.clone());
                                 }
                             } else {
-                                logger.log(&format!("Оригинал: {:?} ({} байт) -> Дубликат: {:?}", path, size, first_seen));
+                                logger.log(&format!("Найден дубликат: {} ({} байт). Оригинал: {}", first_seen.display(), size, path.display()));
                                 hashes.insert(hash, path.clone());
                             }
                         } else {
                             if delete_mode {
                                 let _ = move_to_trash(&path, &mut logger);
                             } else {
-                                logger.log(&format!("Оригинал: {:?} ({} байт) -> Дубликат: {:?}", first_seen, size, path));
+                                logger.log(&format!("Найден дубликат: {} ({} байт). Оригинал: {}", path.display(), size, first_seen.display()));
                             }
                         }
 
@@ -415,12 +415,12 @@ fn main() {
                     }
                 }
                 Err(e) => {
-                    logger.log(&format!("Ошибка хэширования {:?}: {}", path, e));
+                    logger.log(&format!("Ошибка вычисления хеша файла {}: {}", path.display(), e));
                 }
             }
         }
     }
 
-    logger.log(&format!("Работа завершена. Обработано дубликатов: {}", duplicates_found));
+    logger.log(&format!("Работа успешно завершена. Обработано дубликатов: {}", duplicates_found));
     logger.flush();
 }
